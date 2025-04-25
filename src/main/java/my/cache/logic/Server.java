@@ -1,5 +1,9 @@
 package my.cache.logic;
 
+import my.cache.commands.Command;
+import my.cache.exceptions.InvalidCommand;
+import my.cache.model.MessageGet;
+import my.cache.model.MessageSet;
 import my.cache.model.ServerOpts;
 
 import java.io.BufferedReader;
@@ -8,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 
@@ -45,12 +50,41 @@ public class Server {
 
     public void handleConnection(Socket clientSocket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+        //PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);
         while(true){
             String line = bufferedReader.readLine();
-            if(line == null) continue;
-            logger.info("Received Message "  + line);
+            if(line == null || line.isEmpty()) continue;
+            logger.info(line);
+            Thread.ofVirtual().start(() -> handleCommand(line));
             //printWriter.println("Sending a message back: "+ line);
+        }
+    }
+
+    public void handleCommand(String message){
+        try {
+            String[] splitMessage = message.split(" ");
+            String command = splitMessage[0];
+            switch (command) {
+                case "GET": {
+                    if(splitMessage.length > 2) throw new InvalidCommand();
+                    Command.handleGet(new MessageGet(splitMessage[1].getBytes(StandardCharsets.UTF_8)));
+                    break;
+                }
+                case "SET": {
+                    if(splitMessage.length > 4) throw new InvalidCommand();
+                    Command.handleSet(new MessageSet(splitMessage[1].getBytes(StandardCharsets.UTF_8), splitMessage[2].getBytes(StandardCharsets.UTF_8), Integer.parseInt(splitMessage[3])));
+                    break;
+                }
+                case "REMOVE": {
+                    if(splitMessage.length > 2) throw new InvalidCommand();
+                    Command.handleRemove(new MessageGet(splitMessage[1].getBytes(StandardCharsets.UTF_8)));
+                    break;
+                }
+                default:
+                    throw new InvalidCommand();
+            }
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException | InvalidCommand e) {
+            logger.severe("Could not parse message: " + message);
         }
     }
 }

@@ -13,7 +13,7 @@ public class CacherImpl implements Cacher {
     Lock writeLock;
     Lock readLock;
 
-    CacherImpl() {
+    public CacherImpl() {
         this.cache  = new HashMap<>();
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         this.writeLock = lock.writeLock();
