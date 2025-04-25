@@ -1,4 +1,4 @@
-package my.own;
+package my.cache;
 
 public class Main {
     public static void main(String[] args) {
