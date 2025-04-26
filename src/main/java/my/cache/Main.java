@@ -7,6 +7,7 @@ import my.cache.model.ServerOpts;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class Main {
@@ -17,7 +18,7 @@ public class Main {
         Thread.sleep(1000);
         Socket clientSocket = new Socket("127.0.0.1", 3000);
         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
         out.println("SET abc 111 2000");
         Thread.sleep(500);
         out.println("GET abc");

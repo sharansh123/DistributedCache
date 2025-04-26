@@ -50,10 +50,11 @@ public class Server {
     }
 
     public void handleConnection(Socket clientSocket) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
         PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);
         while(true){
             String line = bufferedReader.readLine();
+
             if(line == null || line.isEmpty()) continue;
             logger.info(line);
             Thread.ofVirtual().start(() -> handleCommand(line,printWriter));
