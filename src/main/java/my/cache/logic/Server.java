@@ -2,6 +2,7 @@ package my.cache.logic;
 
 import my.cache.commands.Command;
 import my.cache.exceptions.InvalidCommand;
+import my.cache.interfaces.Cacher;
 import my.cache.model.MessageGet;
 import my.cache.model.MessageSet;
 import my.cache.model.ServerOpts;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
 
 public class Server {
     ServerOpts serverOpts;
-    CacherImpl cacher;
+    Cacher cacher;
     public Logger logger = Logger.getLogger(Server.class.getName());
 
     public Server(ServerOpts serverOpts, CacherImpl cacher) {
@@ -50,34 +51,34 @@ public class Server {
 
     public void handleConnection(Socket clientSocket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        //PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+        PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);
         while(true){
             String line = bufferedReader.readLine();
             if(line == null || line.isEmpty()) continue;
             logger.info(line);
-            Thread.ofVirtual().start(() -> handleCommand(line));
+            Thread.ofVirtual().start(() -> handleCommand(line,printWriter));
             //printWriter.println("Sending a message back: "+ line);
         }
     }
 
-    public void handleCommand(String message){
+    public void handleCommand(String message, PrintWriter printWriter){
         try {
             String[] splitMessage = message.split(" ");
             String command = splitMessage[0];
             switch (command) {
                 case "GET": {
                     if(splitMessage.length > 2) throw new InvalidCommand();
-                    Command.handleGet(new MessageGet(splitMessage[1].getBytes(StandardCharsets.UTF_8)));
+                    printWriter.println(Command.handleGet(new MessageGet(splitMessage[1].getBytes(StandardCharsets.UTF_8)), this.cacher));
                     break;
                 }
                 case "SET": {
                     if(splitMessage.length > 4) throw new InvalidCommand();
-                    Command.handleSet(new MessageSet(splitMessage[1].getBytes(StandardCharsets.UTF_8), splitMessage[2].getBytes(StandardCharsets.UTF_8), Integer.parseInt(splitMessage[3])));
+                    Command.handleSet(new MessageSet(splitMessage[1].getBytes(StandardCharsets.UTF_8), splitMessage[2].getBytes(StandardCharsets.UTF_8), Integer.parseInt(splitMessage[3])), this.cacher);
                     break;
                 }
                 case "REMOVE": {
                     if(splitMessage.length > 2) throw new InvalidCommand();
-                    Command.handleRemove(new MessageGet(splitMessage[1].getBytes(StandardCharsets.UTF_8)));
+                    Command.handleRemove(new MessageGet(splitMessage[1].getBytes(StandardCharsets.UTF_8)), this.cacher);
                     break;
                 }
                 default:

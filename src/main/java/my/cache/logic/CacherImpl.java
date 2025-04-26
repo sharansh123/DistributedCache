@@ -30,6 +30,7 @@ public class CacherImpl implements Cacher {
         String k = new String(key, StandardCharsets.UTF_8);
         this.cache.putIfAbsent(k, value);
         this.writeLock.unlock();
+        TimeTicker.tickAndRemove(ttl, key, this);
     }
 
     @Override
@@ -38,7 +39,7 @@ public class CacherImpl implements Cacher {
         String k = new String(key, StandardCharsets.UTF_8);
         try{
             if(this.cache.containsKey(k)) return this.cache.get(k);
-            return null;
+            return "not found".getBytes(StandardCharsets.UTF_8);
         } finally {
             this.readLock.unlock();
         }
