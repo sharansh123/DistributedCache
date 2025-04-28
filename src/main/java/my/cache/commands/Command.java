@@ -1,9 +1,13 @@
 package my.cache.commands;
 
 
+import my.cache.exceptions.InvalidCommand;
 import my.cache.interfaces.Cacher;
 import my.cache.model.MessageGet;
 import my.cache.model.MessageSet;
+
+import java.net.Socket;
+import java.util.Map;
 
 public class Command {
 
@@ -18,5 +22,10 @@ public class Command {
     public static void handleRemove(MessageGet messageGet, Cacher cacher) {
         cacher.remove(messageGet.getKey());
         //System.out.println("messageRemove = " + messageGet);
+    }
+    public static String handleJoin(String follower, Map<String, Socket> followers, Socket socket) {
+        if(followers.containsKey(follower)) throw new InvalidCommand();
+        followers.put(follower, socket);
+        return "201";
     }
 }
