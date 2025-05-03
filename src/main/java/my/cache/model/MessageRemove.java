@@ -1,6 +1,9 @@
 package my.cache.model;
 
-public class MessageRemove {
+import my.cache.interfaces.Cacher;
+import my.cache.interfaces.MessageHandler;
+
+public class MessageRemove implements MessageHandler {
     byte[] key;
 
     public MessageRemove(byte[] key) {
@@ -17,5 +20,10 @@ public class MessageRemove {
 
     public String toString() {
         return "MessagerRemove [" + new String(key) + "]";
+    }
+
+    @Override
+    public String getCommand() {
+        return "REMOVE";
     }
 }

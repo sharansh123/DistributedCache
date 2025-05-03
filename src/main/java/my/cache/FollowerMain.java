@@ -1,7 +1,11 @@
 package my.cache;
 
+import my.cache.logic.ByteConnection;
 import my.cache.logic.CacherImpl;
 import my.cache.logic.Server;
+import my.cache.model.MessageGet;
+import my.cache.model.MessageJoin;
+import my.cache.model.MessageStatus;
 import my.cache.model.ServerOpts;
 
 import java.io.IOException;
@@ -13,7 +17,7 @@ public class FollowerMain {
     public static void main(String[] args) throws IOException, InterruptedException {
         Thread.sleep(1000);
         ServerOpts serverOpts = fetchServerOpts(args);
-        Server server = new Server(serverOpts, CacherImpl.newCache());
+        Server server = new Server(serverOpts, CacherImpl.newCache(), new ByteConnection());
         System.out.println("Running server...");
         try(Socket leaderSocket = new Socket("127.0.0.1", serverOpts.getLeaderAddress())) {
             Thread.ofVirtual().start(() -> {
@@ -23,8 +27,8 @@ public class FollowerMain {
                     throw new RuntimeException(e);
                 }
             });
-            PrintWriter printWriter = new PrintWriter(leaderSocket.getOutputStream(), true, StandardCharsets.ISO_8859_1);
-            printWriter.println("JOIN " + "follower-" + serverOpts.getListenAddress());
+            server.connection.write(new MessageJoin("follower-" + serverOpts.getListenAddress()), leaderSocket.getOutputStream(), "JOIN");
+
             server.Start();
         } catch (IOException e) {
             e.printStackTrace();

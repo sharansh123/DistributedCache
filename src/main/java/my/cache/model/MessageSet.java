@@ -1,6 +1,9 @@
 package my.cache.model;
 
-public class MessageSet {
+import my.cache.interfaces.Cacher;
+import my.cache.interfaces.MessageHandler;
+
+public class MessageSet implements MessageHandler {
     byte[] key;
     byte[] value;
     int ttl;
@@ -32,6 +35,11 @@ public class MessageSet {
 
     public String toString() {
         return "MessageSet [" + new String(key) + "," + new String(value) + "," + ttl + "]";
+    }
+
+    @Override
+    public String getCommand() {
+        return "SET";
     }
 
 }

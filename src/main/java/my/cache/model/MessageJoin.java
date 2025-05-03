@@ -1,6 +1,9 @@
 package my.cache.model;
 
-public class MessageJoin {
+import my.cache.interfaces.Cacher;
+import my.cache.interfaces.MessageHandler;
+
+public class MessageJoin implements MessageHandler {
    String client;
 
     public MessageJoin(String client) {
@@ -16,6 +19,13 @@ public class MessageJoin {
     }
 
     public String toString() {
-        return "MessagerJoin [" + new String(client) + "]";
+        return "MessageJoin [" + new String(client) + "]";
     }
+
+
+    @Override
+    public String getCommand() {
+        return "JOIN";
+    }
+
 }

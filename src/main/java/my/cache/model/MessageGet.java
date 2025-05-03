@@ -1,6 +1,9 @@
 package my.cache.model;
 
-public class MessageGet {
+import my.cache.interfaces.Cacher;
+import my.cache.interfaces.MessageHandler;
+
+public class MessageGet implements MessageHandler {
     byte[] key;
 
     public MessageGet(byte[] key) {
@@ -17,4 +20,11 @@ public class MessageGet {
     public String toString() {
         return "MessageGet [" + new String(key) + "]";
     }
+
+    @Override
+    public String getCommand() {
+        return "GET";
+    }
+
+
 }

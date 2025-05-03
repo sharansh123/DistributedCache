@@ -39,7 +39,7 @@ public class CacherImpl implements Cacher {
         String k = new String(key, StandardCharsets.ISO_8859_1);
         try{
             if(this.cache.containsKey(k)) return this.cache.get(k);
-            return "not found".getBytes(StandardCharsets.UTF_8);
+            return "".getBytes(StandardCharsets.UTF_8);
         } finally {
             this.readLock.unlock();
         }
