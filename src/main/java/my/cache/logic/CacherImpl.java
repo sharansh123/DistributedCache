@@ -27,7 +27,7 @@ public class CacherImpl implements Cacher {
     @Override
     public void set(byte[] key, byte[] value, int ttl) {
         this.writeLock.lock();
-        String k = new String(key, StandardCharsets.UTF_8);
+        String k = new String(key, StandardCharsets.ISO_8859_1);
         this.cache.putIfAbsent(k, value);
         this.writeLock.unlock();
         TimeTicker.tickAndRemove(ttl, key, this);
@@ -36,7 +36,7 @@ public class CacherImpl implements Cacher {
     @Override
     public byte[] get(byte[] key) {
         this.readLock.lock();
-        String k = new String(key, StandardCharsets.UTF_8);
+        String k = new String(key, StandardCharsets.ISO_8859_1);
         try{
             if(this.cache.containsKey(k)) return this.cache.get(k);
             return "not found".getBytes(StandardCharsets.UTF_8);

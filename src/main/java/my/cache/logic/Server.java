@@ -14,7 +14,11 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
-
+//To-Do: Create Proto Buffers
+//to-do: create basic load balancer
+//to-do: create basic sentinel for monitoring and raft consensus
+//to-do: replication of data
+//to-do: server sync implementation
 public class Server {
     ServerOpts serverOpts;
     Cacher cacher;
