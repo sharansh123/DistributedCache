@@ -3,6 +3,7 @@ package my.cache.model;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerOpts {
     int listenAddress;
@@ -15,7 +16,7 @@ public class ServerOpts {
         this.listenAddress = listenAddress;
         this.isLeader = isLeader;
         this.leaderAddress = leaderAddress;
-        this.followers = new HashMap<>();
+        this.followers = new ConcurrentHashMap<>();
     }
 
     public int getListenAddress() {

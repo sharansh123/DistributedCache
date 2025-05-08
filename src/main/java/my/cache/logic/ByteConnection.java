@@ -77,6 +77,14 @@ public class ByteConnection implements Connection {
                 packer.flush();
                 return packBytes(baos);
             }
+            case "HEARTBEAT": {
+                MessageHeartBeat heartBeat = (MessageHeartBeat) request;
+                packer.packString(heartBeat.getOffset());
+                packer.packString(heartBeat.getFrom());
+                packer.packLong(heartBeat.getTimestamp());
+                packer.flush();
+                return packBytes(baos);
+            }
             default:
                 throw new InvalidCommand();
         }
@@ -102,6 +110,9 @@ public class ByteConnection implements Connection {
             }
             case "STATUS": {
                 return new MessageStatus(unpacker.unpackString(), unpacker.unpackString());
+            }
+            case "HEARTBEAT": {
+                return new MessageHeartBeat(unpacker.unpackString(), unpacker.unpackString(), unpacker.unpackLong());
             }
             default:
                 throw new InvalidCommand();

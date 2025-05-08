@@ -12,15 +12,15 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-//To-Do: Create Proto Buffers
-//to-do: create basic load balancer
-//to-do: create basic sentinel for monitoring and raft consensus
-//to-do: replication of data
-//to-do: server sync implementation
+
+//to-do: raft consensus
+//to-do: multiple leaders
 public class Server {
-    ServerOpts serverOpts;
+
+    public ServerOpts serverOpts;
     Cacher cacher;
     public Logger logger = Logger.getLogger(Server.class.getName());
     public Connection connection;
@@ -57,16 +57,21 @@ public class Server {
 
         InputStream inputStream = clientSocket.getInputStream();
         OutputStream outputStream = clientSocket.getOutputStream();
+        AtomicInteger counter = new AtomicInteger(0);
         while(true){
+            if(counter.get() >= 3) {
+                logger.severe("Closing connection!");
+                clientSocket.close();
+                break;
+            }
             Object data = connection.read(inputStream);
-            MessageHandler message = (MessageHandler) data;
-            if(message == null) continue;
-            logger.info(data.toString());
+            if(data == null) continue;
             Thread.ofVirtual().start(() -> {
                 try {
                     handleCommand(data ,outputStream, clientSocket);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                } catch (IOException | InvalidCommand e) {
+                    logger.severe("Could not handle command from " + clientSocket.getInetAddress().getHostAddress());
+                    counter.incrementAndGet();
                 }
             });
             //printWriter.println("Sending a message back: "+ line);
@@ -74,49 +79,43 @@ public class Server {
     }
 
     public void handleCommand(Object data, OutputStream outputStream, Socket clientSocket) throws IOException {
-        try {
-            MessageHandler message = (MessageHandler) data;
-            switch (message.getCommand()) {
-                case "GET": {
-                    String val = Command.handleGet((MessageGet) data, cacher);
-                    MessageStatus messageStatus = new MessageStatus("200", val);
-                    if(val.isEmpty()) messageStatus = new MessageStatus("404", "Not Found");
-                    connection.write(messageStatus,outputStream, "STATUS");
-                    break;
-                }
-                case "SET": {
-                    Command.handleSet((MessageSet) data, cacher);
-                    if(serverOpts.getIsLeader()) sendToFollowers(data, message.getCommand());
-                    connection.write(new MessageStatus("200", " SET OK"), outputStream, "STATUS");
-                    break;
-                }
-
-                case "REMOVE": {
-                    Command.handleRemove((MessageRemove) data, cacher);
-                    if(serverOpts.getIsLeader()) sendToFollowers(data, message.getCommand());
-                    connection.write(new MessageStatus("200", "REMOVE OK"), outputStream, "STATUS");
-                    break;
-                }
-
-                case "JOIN": {
-                    Command.handleJoin((MessageJoin)data, serverOpts.getFollowers(), clientSocket);
-                    logger.info(serverOpts.getFollowers().values().toString());
-                    connection.write(new MessageStatus("200", "JOIN OK"), outputStream, "STATUS");
-                    break;
-                }
-                case "STATUS": {
-                    logger.info(data.toString());
-                    break;
-                }
-                default:
-                    throw new InvalidCommand();
+        MessageHandler message = (MessageHandler) data;
+        switch (message.getCommand()) {
+            case "GET": {
+                String val = Command.handleGet((MessageGet) data, cacher);
+                MessageStatus messageStatus = new MessageStatus("200", val);
+                if(val.isEmpty()) messageStatus = new MessageStatus("404", "Not Found");
+                connection.write(messageStatus,outputStream, "STATUS");
+                break;
             }
-        } catch (InvalidCommand e) {
-            logger.severe("Could not parse message: " + data);
-            connection.write(new MessageStatus("400", "Invalid command"), outputStream, e.getMessage());
-        } catch (IOException e) {
-            logger.severe("Couldn't Connect: " + e.getMessage());
-            //printWriter.println("Status: 500");
+
+            case "SET": {
+                Command.handleSet((MessageSet) data, cacher);
+                if(serverOpts.getIsLeader()) sendToFollowers(data, message.getCommand());
+                connection.write(new MessageStatus("200", " SET OK"), outputStream, "STATUS");
+                break;
+            }
+            case "REMOVE": {
+                Command.handleRemove((MessageRemove) data, cacher);
+                if(serverOpts.getIsLeader()) sendToFollowers(data, message.getCommand());
+                connection.write(new MessageStatus("200", "REMOVE OK"), outputStream, "STATUS");
+                break;
+            }
+
+            case "JOIN": {
+                Command.handleJoin((MessageJoin)data, serverOpts.getFollowers(), clientSocket);
+                logger.info(serverOpts.getFollowers().keySet().toString());
+                connection.write(new MessageStatus("200", "JOIN OK"), outputStream, "STATUS");
+                break;
+            }
+            case "STATUS": {
+                logger.info(data.toString());
+                break;
+            }
+            default: {
+                connection.write(new MessageStatus("400", "Invalid command"), outputStream, "STATUS");
+                throw new InvalidCommand();
+            }
         }
     }
 

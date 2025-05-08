@@ -49,7 +49,7 @@ public class CacherImpl implements Cacher {
     public void remove(byte[] key) {
         this.writeLock.lock();
         try{
-            this.cache.remove(new String(key, StandardCharsets.UTF_8));
+            this.cache.remove(new String(key, StandardCharsets.ISO_8859_1));
         } finally {
             this.writeLock.unlock();
         }
@@ -58,7 +58,7 @@ public class CacherImpl implements Cacher {
     @Override
     public boolean has(byte[] key) {
         this.readLock.lock();
-        String k = new String(key, StandardCharsets.UTF_8);
+        String k = new String(key,StandardCharsets.ISO_8859_1);
         try{
             return this.cache.containsKey(k);
         } finally {

@@ -13,5 +13,8 @@ run-follower-2: build
 run-follower-3: build
 	mvn exec:java -Dexec.mainClass="my.cache.FollowerMain" -Dexec.args="5000 4000"
 
+run-follower-4: build
+	mvn exec:java -Dexec.mainClass="my.cache.FollowerMain" -Dexec.args="6000 4000"
+
 run-client: build
 	mvn exec:java -Dexec.mainClass="my.cache.ClientMain"

@@ -1,12 +1,11 @@
 package my.cache;
 
+import my.cache.interfaces.Connection;
 import my.cache.logic.ByteConnection;
 import my.cache.logic.CacherImpl;
+import my.cache.logic.RaftServer;
 import my.cache.logic.Server;
-import my.cache.model.MessageGet;
-import my.cache.model.MessageJoin;
-import my.cache.model.MessageStatus;
-import my.cache.model.ServerOpts;
+import my.cache.model.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,22 +16,39 @@ public class FollowerMain {
     public static void main(String[] args) throws IOException, InterruptedException {
         Thread.sleep(1000);
         ServerOpts serverOpts = fetchServerOpts(args);
-        Server server = new Server(serverOpts, CacherImpl.newCache(), new ByteConnection());
+        Connection connection = new ByteConnection();
+        Server server = new Server(serverOpts, CacherImpl.newCache(),connection);
+        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader()), new ByteConnection());
         System.out.println("Running server...");
-        try(Socket leaderSocket = new Socket("127.0.0.1", serverOpts.getLeaderAddress())) {
-            Thread.ofVirtual().start(() -> {
-                try {
-                    server.handleConnection(leaderSocket);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            server.connection.write(new MessageJoin("follower-" + serverOpts.getListenAddress()), leaderSocket.getOutputStream(), "JOIN");
-
+        try(Socket leaderSocket = new Socket("127.0.0.1", serverOpts.getLeaderAddress());Socket leaderRaftSocket = new Socket("127.0.0.1", raftServer.raftOpts.getLeaderAddress()) ) {
+            connectToServerAndJoin(server, leaderSocket);
+            connectToRaftAndJoin(raftServer, leaderRaftSocket);
             server.Start();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void connectToServerAndJoin(Server server, Socket leaderSocket) throws IOException {
+        Thread.ofVirtual().start(() -> {
+            try {
+                server.handleConnection(leaderSocket);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        server.connection.write(new MessageJoin("follower-" + server.serverOpts.getListenAddress()), leaderSocket.getOutputStream(), "JOIN");
+    }
+
+    private static void connectToRaftAndJoin(RaftServer server, Socket leaderSocket) throws IOException {
+        Thread.ofVirtual().start(() -> {
+            try {
+                server.handleConnection(leaderSocket);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        server.connection.write(new MessageJoin("follower-raft-" + server.raftOpts.getListenAddress()), leaderSocket.getOutputStream(), "JOIN");
     }
 
     private static ServerOpts fetchServerOpts(String[] args) {

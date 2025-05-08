@@ -5,13 +5,15 @@ import my.cache.logic.ByteConnection;
 import my.cache.model.MessageGet;
 import my.cache.model.MessageSet;
 import my.cache.model.MessageStatus;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksDBException;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 public class ClientMain {
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, RocksDBException {
         Socket clientSocket = new Socket("127.0.0.1", 4000);
         InputStream inputStream = clientSocket.getInputStream();
         OutputStream outputStream = clientSocket.getOutputStream();
@@ -41,5 +43,8 @@ public class ClientMain {
         System.out.println(messageStatus);
         Thread.sleep(500);
         clientSocket.close();
+        
+
+
     }
 }
