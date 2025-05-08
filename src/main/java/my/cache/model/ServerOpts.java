@@ -1,10 +1,12 @@
 package my.cache.model;
 
+import lombok.Data;
+
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+@Data
 public class ServerOpts {
     int listenAddress;
     Boolean isLeader;
@@ -16,28 +18,6 @@ public class ServerOpts {
         this.listenAddress = listenAddress;
         this.isLeader = isLeader;
         this.leaderAddress = leaderAddress;
-        this.followers = new ConcurrentHashMap<>();
-    }
-
-    public int getListenAddress() {
-        return listenAddress;
-    }
-    public void setListenAddress(int listenAddress) {
-        this.listenAddress = listenAddress;
-    }
-    public Boolean getIsLeader() {
-        return isLeader;
-    }
-    public void setIsLeader(Boolean isLeader) {
-        this.isLeader = isLeader;
-    }
-    public int getLeaderAddress() {
-        return leaderAddress;
-    }
-    public void setLeaderAddress(int leaderAddress) {
-        this.leaderAddress = leaderAddress;
-    }
-    public Map<String, Socket> getFollowers() {
-        return followers;
+        this.followers = new HashMap<>();
     }
 }
