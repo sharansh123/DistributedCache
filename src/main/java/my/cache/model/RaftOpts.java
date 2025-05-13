@@ -20,12 +20,12 @@ public class RaftOpts {
     HeartBeatTracker heartBeatTracker;
     Boolean disappear;
 
-    public RaftOpts(int listenAddress, int leaderAddress, Boolean isLeader) {
+    public RaftOpts(int listenAddress, int leaderAddress, Boolean isLeader, HeartBeatTracker heartBeatTracker) {
         this.listenAddress = listenAddress;
         this.leaderAddress = leaderAddress;
         this.isLeader = isLeader;
         this.followers = new HashMap<>();
-        this.heartBeatTracker = new HeartBeatTracker(5);
+        this.heartBeatTracker = heartBeatTracker;
         this.disappear = false;
     }
 

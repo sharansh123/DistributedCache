@@ -69,7 +69,7 @@ public class RaftServer {
                     logger.info("Heartbeat received: " + timeStamp + ", " + offset);
                     if(!offset.equals(WALStorage.getOffset())){
                         raftOpts.setDisappear(true);
-                        logger.fine("Offset does not match");
+                        logger.info("Offset does not match");
                         break;
                     }
                     MessageHeartBeat response = new MessageHeartBeat(WALStorage.getOffset(), "follower-" + raftOpts.getListenAddress(), timeStamp);

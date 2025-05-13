@@ -1,6 +1,7 @@
 package my.cache.model;
 
 import lombok.Data;
+import my.cache.logic.HeartBeatTracker;
 
 import java.net.Socket;
 import java.util.HashMap;
@@ -12,7 +13,7 @@ public class ServerOpts {
     Boolean isLeader;
     int leaderAddress;
     Map<String, Socket> followers;
-
+    HeartBeatTracker heartBeatTracker;
 
     public ServerOpts(int listenAddress, Boolean isLeader, int leaderAddress) {
         this.listenAddress = listenAddress;

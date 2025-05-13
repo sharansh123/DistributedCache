@@ -12,7 +12,7 @@ public class LeaderMain {
         ServerOpts serverOpts = fetchServerOpts(args);
         Connection connection =  new ByteConnection();
         Server server = new Server(serverOpts, CacherImpl.newCache(), connection);
-        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader()), new ByteConnection());
+        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader(), new HeartBeatTracker(5)), new ByteConnection());
         System.out.println("Running server...");
         Thread.ofVirtual().start(() -> {
             try {
@@ -23,6 +23,7 @@ public class LeaderMain {
         });
         Thread.ofVirtual().start(() -> TimeTicker.tickHeartBeat(2000, raftServer.raftOpts.getFollowers(), "leader", raftServer.connection, raftServer.raftOpts.getHeartBeatTracker()));
         server.Start();
+
     }
 
     private static ServerOpts fetchServerOpts(String[] args) {

@@ -7,11 +7,16 @@ import my.cache.interfaces.Cacher;
 import my.cache.interfaces.Connection;
 import my.cache.interfaces.MessageHandler;
 import my.cache.model.*;
+import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessagePacker;
+import org.msgpack.core.MessageUnpacker;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -24,6 +29,7 @@ public class Server {
     Cacher cacher;
     public Logger logger = Logger.getLogger(Server.class.getName());
     public Connection connection;
+
 
     public Server(ServerOpts serverOpts, CacherImpl cacher, Connection connection) {
         this.serverOpts = serverOpts;
@@ -88,11 +94,14 @@ public class Server {
                 connection.write(messageStatus,outputStream, "STATUS");
                 break;
             }
-
             case "SET": {
-                Command.handleSet((MessageSet) data, cacher);
+                if(serverOpts.getHeartBeatTracker().getHeartBeatCount(System.currentTimeMillis()) <= serverOpts.getFollowers().size()/2) {
+                    connection.write(new MessageStatus("500", " NOT OK"), outputStream, "STATUS");
+                    break;
+                }
+                connection.write(new MessageStatus("200", "SET OK"), outputStream, "STATUS");
                 if(serverOpts.getIsLeader()) sendToFollowers(data, message.getCommand());
-                connection.write(new MessageStatus("200", " SET OK"), outputStream, "STATUS");
+                Command.handleSet((MessageSet) data, cacher);
                 break;
             }
             case "REMOVE": {
@@ -101,9 +110,8 @@ public class Server {
                 connection.write(new MessageStatus("200", "REMOVE OK"), outputStream, "STATUS");
                 break;
             }
-
             case "JOIN": {
-                Command.handleJoin((MessageJoin)data, serverOpts.getFollowers(), clientSocket);
+                Command.handleJoin((MessageJoin) data, serverOpts.getFollowers(), clientSocket);
                 logger.info(serverOpts.getFollowers().keySet().toString());
                 connection.write(new MessageStatus("200", "JOIN OK"), outputStream, "STATUS");
                 break;

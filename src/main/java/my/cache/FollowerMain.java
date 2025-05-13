@@ -1,10 +1,7 @@
 package my.cache;
 
 import my.cache.interfaces.Connection;
-import my.cache.logic.ByteConnection;
-import my.cache.logic.CacherImpl;
-import my.cache.logic.RaftServer;
-import my.cache.logic.Server;
+import my.cache.logic.*;
 import my.cache.model.*;
 
 import java.io.IOException;
@@ -15,10 +12,12 @@ import java.nio.charset.StandardCharsets;
 public class FollowerMain {
     public static void main(String[] args) throws IOException, InterruptedException {
         Thread.sleep(1000);
+        HeartBeatTracker heartBeatTracker = new HeartBeatTracker(5);
         ServerOpts serverOpts = fetchServerOpts(args);
         Connection connection = new ByteConnection();
+        serverOpts.setHeartBeatTracker(heartBeatTracker);
         Server server = new Server(serverOpts, CacherImpl.newCache(),connection);
-        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader()), new ByteConnection());
+        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader(), heartBeatTracker), new ByteConnection());
         System.out.println("Running server...");
         try(Socket leaderSocket = new Socket("127.0.0.1", serverOpts.getLeaderAddress());Socket leaderRaftSocket = new Socket("127.0.0.1", raftServer.raftOpts.getLeaderAddress()) ) {
             connectToServerAndJoin(server, leaderSocket);

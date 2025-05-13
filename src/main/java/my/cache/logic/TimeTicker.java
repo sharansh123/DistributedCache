@@ -19,7 +19,7 @@ public class TimeTicker {
                     try {
                         Thread.sleep(ttl);
                         cacher.remove(key);
-                        logger.info("Removed " + new String(key) + " from cache");
+                        //logger.info("Removed " + new String(key) + " from cache");
                     } catch (InterruptedException e) {
                         logger.severe("Couldn't remove key: " + new String(key));
                         throw new RuntimeException(e);
