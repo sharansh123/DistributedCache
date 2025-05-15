@@ -11,8 +11,10 @@ public class LeaderMain {
     public static void main(String[] args) throws IOException, InterruptedException {
         ServerOpts serverOpts = fetchServerOpts(args);
         Connection connection =  new ByteConnection();
-        Server server = new Server(serverOpts, CacherImpl.newCache(), connection);
-        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader(), new HeartBeatTracker(5)), new ByteConnection());
+        Server server = new Server(serverOpts, new ConcurrentCache(), connection);
+        HeartBeatTracker heartBeatTracker = new HeartBeatTracker(5);
+        serverOpts.setHeartBeatTracker(heartBeatTracker);
+        RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader(), heartBeatTracker), new ByteConnection());
         System.out.println("Running server...");
         Thread.ofVirtual().start(() -> {
             try {

@@ -31,7 +31,7 @@ public class Server {
     public Connection connection;
 
 
-    public Server(ServerOpts serverOpts, CacherImpl cacher, Connection connection) {
+    public Server(ServerOpts serverOpts, Cacher cacher, Connection connection) {
         this.serverOpts = serverOpts;
         this.cacher = cacher;
         this.connection = connection;
@@ -74,6 +74,7 @@ public class Server {
             if(data == null) continue;
             Thread.ofVirtual().start(() -> {
                 try {
+                    //logger.info("Received data from " + clientSocket.getLocalSocketAddress());
                     handleCommand(data ,outputStream, clientSocket);
                 } catch (IOException | InvalidCommand e) {
                     logger.severe("Could not handle command from " + clientSocket.getInetAddress().getHostAddress());
@@ -94,13 +95,18 @@ public class Server {
                 connection.write(messageStatus,outputStream, "STATUS");
                 break;
             }
+
             case "SET": {
-                if(serverOpts.getHeartBeatTracker().getHeartBeatCount(System.currentTimeMillis()) <= serverOpts.getFollowers().size()/2) {
-                    connection.write(new MessageStatus("500", " NOT OK"), outputStream, "STATUS");
-                    break;
+                if(serverOpts.getIsLeader()){
+                    if(serverOpts.getHeartBeatTracker().getHeartBeatCount(System.currentTimeMillis()) <= serverOpts.getFollowers().size()/2) {
+                        logger.info("Not able to set key: " + serverOpts.getHeartBeatTracker().getHeartBeatCount(System.currentTimeMillis()));
+                        connection.write(new MessageStatus("500", " NOT OK"), outputStream, "STATUS");
+                        break;
+                    }
+                    connection.write(new MessageStatus("200", "SET OK"), outputStream, "STATUS");
+                    sendToFollowers(data, message.getCommand());
                 }
-                connection.write(new MessageStatus("200", "SET OK"), outputStream, "STATUS");
-                if(serverOpts.getIsLeader()) sendToFollowers(data, message.getCommand());
+                logger.info("Setting the key!");
                 Command.handleSet((MessageSet) data, cacher);
                 break;
             }

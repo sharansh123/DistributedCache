@@ -16,7 +16,7 @@ public class FollowerMain {
         ServerOpts serverOpts = fetchServerOpts(args);
         Connection connection = new ByteConnection();
         serverOpts.setHeartBeatTracker(heartBeatTracker);
-        Server server = new Server(serverOpts, CacherImpl.newCache(),connection);
+        Server server = new Server(serverOpts, new ConcurrentCache(),connection);
         RaftServer raftServer = new RaftServer(new RaftOpts(serverOpts.getListenAddress()+1, serverOpts.getLeaderAddress()+1, serverOpts.getIsLeader(), heartBeatTracker), new ByteConnection());
         System.out.println("Running server...");
         try(Socket leaderSocket = new Socket("127.0.0.1", serverOpts.getLeaderAddress());Socket leaderRaftSocket = new Socket("127.0.0.1", raftServer.raftOpts.getLeaderAddress()) ) {

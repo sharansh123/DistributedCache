@@ -26,7 +26,7 @@ public class ClientMain {
         messageStatus = (MessageStatus) connection.read(inputStream);
         System.out.println(messageStatus);
         Thread.sleep(500);
-        connection.write(new MessageSet("abcd".getBytes(StandardCharsets.UTF_8), "1112".getBytes(StandardCharsets.UTF_8),3000), outputStream, "SET");
+        connection.write(new MessageSet("abcd".getBytes(StandardCharsets.UTF_8), "1112".getBytes(StandardCharsets.UTF_8),5000), outputStream, "SET");
         messageStatus = (MessageStatus) connection.read(inputStream);
         System.out.println(messageStatus);
         Thread.sleep(500);

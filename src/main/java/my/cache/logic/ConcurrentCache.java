@@ -2,11 +2,14 @@ package my.cache.logic;
 
 import lombok.Data;
 import my.cache.interfaces.Cacher;
+import my.cache.model.RemoveByte;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
 
 @Data
 public class ConcurrentCache implements Cacher {
@@ -15,12 +18,29 @@ public class ConcurrentCache implements Cacher {
     ArrayBlockingQueue<Long> setTimes;
     ArrayBlockingQueue<Long> getTimes;
     ArrayBlockingQueue<Long> removeTimes;
+    DelayQueue<RemoveByte> removeQueue;
 
     public ConcurrentCache() {
         cache = new ConcurrentHashMap<>();
         this.setTimes = new ArrayBlockingQueue<>(10000000);
         this.getTimes = new ArrayBlockingQueue<>(10000000);
         this.removeTimes = new ArrayBlockingQueue<>(10000000);
+        this.removeQueue = new DelayQueue<>();
+        spinUpDelayQueue();
+    }
+
+    public void spinUpDelayQueue() {
+        Thread.ofVirtual().start(() -> {
+           while(true) {
+               try {
+                   RemoveByte removeByte = this.removeQueue.take();
+                   remove(removeByte.getKeyToRemove());
+                   System.out.println("Removed: " + Arrays.toString(removeByte.getKeyToRemove()));
+               } catch (InterruptedException e) {
+                   System.out.println("Unable to remove key");
+               }
+           }
+        });
     }
 
 
@@ -29,7 +49,8 @@ public class ConcurrentCache implements Cacher {
         long st = System.nanoTime();
         String k = new String(key, StandardCharsets.ISO_8859_1);
         this.cache.putIfAbsent(k, value);
-        TimeTicker.tickAndRemove(ttl, key, this);
+        this.removeQueue.add(new RemoveByte(key, ttl));
+        //TimeTicker.tickAndRemove(ttl, key, this);
         setTimes.add(System.nanoTime()-st);
     }
 
